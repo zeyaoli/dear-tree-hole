@@ -1,17 +1,23 @@
 //ref: https://github.com/0x006F/react-media-recorder/blob/master/src/index.ts#L218
 //ref: https://github.com/wmik/use-media-recorder/blob/master/index.js
-import React, { useState, useRef, useEffect, useCallback } from "react";
+import React, {
+  useState,
+  useRef,
+  useEffect,
+  useCallback,
+  useContext,
+} from "react";
 import regeneratorRuntime from "regenerator-runtime";
-import io from "socket.io-client";
+import SocketContext from "./SocketContext";
 
 const RecordView = ({
   audio = true,
   video = false,
   onStop = () => null,
-  screen = false,
   mediaStreamConstraints = {},
   changeRecordState,
 }) => {
+  // init states ref and context
   const mediaRecorder = useRef(null);
   const mediaChunks = useRef([]);
   const mediaStream = useRef(null);
@@ -19,6 +25,7 @@ const RecordView = ({
   const [status, setStatus] = useState("idle");
   const [mediaBlobUrl, setMediaBlobUrl] = useState(null);
   const [error, setError] = useState(null);
+  const socket = useContext(SocketContext);
 
   const getMediaStream = useCallback(async () => {
     if (error) {
@@ -113,11 +120,10 @@ const RecordView = ({
   };
 
   const onRecordingActive = (e) => {
-    console.log(e);
     if (e.data.size) {
       mediaChunks.current.push(e.data);
     }
-    console.log(mediaChunks.current);
+    // console.log(mediaChunks.current);
   };
 
   const stopRecording = () => {
@@ -139,14 +145,14 @@ const RecordView = ({
     setMediaBlobUrl(url);
     onStop(url, blob);
     blobToSubmit.current = blob;
-    console.log(blob);
+    // console.log(blob);
   };
 
   const onSubmit = () => {
     if (blobToSubmit.current) {
       console.log(blobToSubmit.current);
       // web socket
-
+      socket.emit("video", blobToSubmit.current);
       changeRecordState();
     }
   };
