@@ -4,11 +4,13 @@ import RecordView from "./Components/RecordView";
 import Template from "./Components/Template";
 import DisplayVideo from "./Components/DisplayVideo";
 import io from "socket.io-client";
+import "./Styles/app.css";
 //socket single instance ref:https://itnext.io/how-to-use-a-single-instance-of-socket-io-in-your-react-app-6a4465dcb398
 const socket = io();
 
 const App = (props) => {
-  const [record, setRecord] = useState(false);
+  //default record view first
+  const [record, setRecord] = useState(true);
 
   useEffect(() => {
     socket.on("connect", () => {
@@ -23,13 +25,15 @@ const App = (props) => {
 
   return (
     <SocketContext.Provider value={socket}>
-      <Template />
-      {/* if onsubmit, RecordView disappear, displays prev person video */}
-      {record ? (
-        <RecordView changeRecordState={changeRecordState} />
-      ) : (
-        <DisplayVideo />
-      )}
+      <main>
+        <Template />
+        {/* if onsubmit, RecordView disappear, displays prev person video */}
+        {record ? (
+          <RecordView changeRecordState={changeRecordState} />
+        ) : (
+          <DisplayVideo />
+        )}
+      </main>
     </SocketContext.Provider>
   );
 };

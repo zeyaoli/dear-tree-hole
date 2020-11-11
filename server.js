@@ -11,6 +11,7 @@ const entryFiles = Path.join(__dirname, "./public/index.html");
 const options = {};
 
 const bundler = new Bundler(entryFiles, options); //create parcel bundler
+app.use("/videos", express.static(Path.join(__dirname, "public/videos")));
 app.use(bundler.middleware()); // let express use the bundler middleware
 
 // app.use(cors());
@@ -29,20 +30,21 @@ const io = socketIo(server); // webSockets work with the http server
 io.on("connection", (socket) => {
   console.log("New client connected");
   socket.on("video", (data) => {
-    // let fileName = __dirname + "/videos/" + Date.now() + ".webm";
-    // // console.log(fileName);
-    // let processedName = `videos/${Date.now()}.webm`;
-    // console.log(processedName);
-    // videoFileArr.push(data);
-    // socket.emit("videoFileArr", videoFileArr);
-    // fs.writeFile(fileName, data, function (err) {
-    //   if (err) console.log(err);
-    //   console.log("It's saved!");
-    //   videoFileArr.push(processedName);
-    //   socket.emit("videoFileArr", videoFileArr);
-    // });
+    let fileName = __dirname + "/public/videos/" + Date.now() + ".webm";
+    // console.log(fileName);
+    let processedName = `videos/${Date.now()}.webm`;
+    fs.writeFile(fileName, data, function (err) {
+      if (err) console.log(err);
+      console.log("It's saved!");
+      videoFileArr.push(processedName);
+      console.log(`prevArr: ${videoFileArr}`);
+      socket.emit("videoFileArr", videoFileArr);
+    });
   });
-  // socket.on('dispose', ()=>{
-
-  // })
+  socket.on("dispose", (data) => {
+    if (data == "disposed") {
+      videoFileArr.shift();
+      console.log(`after disposing: ${videoFileArr}`);
+    }
+  });
 });

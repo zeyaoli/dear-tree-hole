@@ -1,17 +1,13 @@
 import React, { useState, useRef, useEffect, useContext } from "react";
 import SocketContext from "./SocketContext";
 
-//this one used to work - but i need the url from socket, cant import it all the time
-// *** new bug: Cannot resolve dependency 'public/videos/1604965785840.webm' ***
-// import testVideo from "public/videos/1604965785840.webm";
-// import ReactPlayer from "react-player";
-
 // Component
 const DisplayVideo = () => {
   const socket = useContext(SocketContext);
   const [mediaUrl, setMediaUrl] = useState(null);
   const videoRef = useRef();
   const canvasRef = useRef();
+
   // canvas initialization
   const initCanvas = () => {
     const canvas = canvasRef.current;
@@ -88,37 +84,53 @@ const DisplayVideo = () => {
     filter.type = "highshelf";
     filter.frequency.value = 2000;
     filter.gain.value = 10;
-
-    let source = context.createBufferSource();
-    source.playbackRate.value = 5;
-    source.connect(context.destination);
   };
 
   useEffect(() => {
-    initCanvas();
-    audioManipulation();
-
-    // socket.on("videoFileArr", (arr) => {
-    //   const video = videoRef.current;
-    //   setMediaUrl(arr[0]);
-    //   console.log(arr[0]);
-    //   video.srcObject = mediaUrl;
-    // });
-    // can't set the URL - path is not right
-    setMediaUrl("videos/1604965785840.webm");
-    // videoRef.current.src = mediaUrl;
+    //receive previous person's video
+    socket.on("videoFileArr", (arr) => {
+      if (arr.length > 1) {
+        setMediaUrl(arr[0]);
+        initCanvas();
+        audioManipulation();
+        videoRef.current.onended = disposeVideo;
+      } else {
+        setMediaUrl(null);
+      }
+    });
 
     return () => {
       cancelAnimationFrame(requestId);
     };
   }, []);
 
+  const disposeVideo = () => {
+    console.log("send out dispose video");
+    socket.emit("dispose", "disposed");
+  };
+
+  const playVideo = () => {
+    videoRef.current.play();
+  };
+
   return (
     <>
-      {/* <ReactPlayer url={testVideo} ref={videoRef} controls /> */}
-      <canvas ref={canvasRef}></canvas>
-      {/* if you change it to mediaUrl it does not work  */}
-      <video ref={videoRef} src={mediaUrl} type='video/webm' controls />
+      {/* Detect if you are the first one to put the video or not! */}
+      {mediaUrl == null ? (
+        <p>Sorry no one sent a video before you</p>
+      ) : (
+        <>
+          <canvas ref={canvasRef}></canvas>
+          <video
+            ref={videoRef}
+            src={mediaUrl}
+            type='video/webm'
+            controls
+            style={{ display: "none" }}
+          />
+          <button onClick={playVideo}>Play</button>
+        </>
+      )}
     </>
   );
 };

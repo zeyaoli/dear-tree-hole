@@ -1,0 +1,23 @@
+@import url("https://fonts.googleapis.com/css2?family=Ubuntu+Mono:ital,wght@0,400;0,700;1,400;1,700&display=swap");
+
+html,
+body {
+  margin: 0;
+  padding: 0;
+  font-family: "Ubuntu Mono", monospace;
+  max-width: 1260px;
+}
+
+main {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  padding: 20px;
+}
+
+button {
+  font-family: "Ubuntu Mono", monospace;
+  margin: 10px;
+  padding: 5px;
+}

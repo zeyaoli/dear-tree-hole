@@ -9,6 +9,7 @@ import React, {
 } from "react";
 import regeneratorRuntime from "regenerator-runtime";
 import SocketContext from "./SocketContext";
+import "../Styles/record.css";
 
 const RecordView = ({
   audio = true,
@@ -26,6 +27,8 @@ const RecordView = ({
   const [mediaBlobUrl, setMediaBlobUrl] = useState(null);
   const [error, setError] = useState(null);
   const socket = useContext(SocketContext);
+  const recordTimeout = useRef(null);
+  const recTimeLimit = 11000;
 
   const getMediaStream = useCallback(async () => {
     if (error) {
@@ -50,7 +53,7 @@ const RecordView = ({
       }
 
       mediaStream.current = stream;
-      setStatus("ready");
+      setStatus("🌳 i'm ready. speak out your feeling anytime 🌳");
     } catch (err) {
       setError(err);
       setStatus("failed to record :( ");
@@ -115,7 +118,14 @@ const RecordView = ({
       mediaRecorder.current.onstop = onRecordingStop;
       mediaRecorder.current.start();
       console.log("start");
-      setStatus("recording");
+      setStatus("💓 i'm hearing you speaking, you can stop sharing anytime 💓");
+      recordTimeout.current = setTimeout(() => {
+        mediaRecorder.current.stop();
+        console.log("stop");
+        setStatus("Recording Stopped");
+        clearMediaStream();
+        mediaRecorder.current = null;
+      }, recTimeLimit);
     }
   };
 
@@ -134,11 +144,13 @@ const RecordView = ({
         setStatus("Recording Stopped");
         clearMediaStream();
         mediaRecorder.current = null;
+        clearTimeout(recordTimeout.current);
       }
     }
   };
 
   const onRecordingStop = () => {
+    clearTimeout(recordTimeout.current);
     const [chunks] = mediaChunks.current;
     const blob = new Blob(mediaChunks.current, { type: "video/webm" });
     const url = URL.createObjectURL(blob);
@@ -160,13 +172,16 @@ const RecordView = ({
   return (
     <>
       <p>{status}</p>
-      <button onClick={startRecording}>Start</button>
-      <button onClick={stopRecording}>Stop</button>
+      <div id='buttons'>
+        <button onClick={startRecording}>Start talking</button>
+        <button onClick={stopRecording}>I'm done sharing</button>
+      </div>
+
       {mediaBlobUrl !== null && (
-        <>
+        <div id='preview'>
           <video src={mediaBlobUrl} controls />
-          <button onClick={onSubmit}>Submit</button>
-        </>
+          <button onClick={onSubmit}>Send out your feeling</button>
+        </div>
       )}
     </>
   );
